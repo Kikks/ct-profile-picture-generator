@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import { useCallback, useRef } from 'react'
-import { useDropzone } from 'react-dropzone'
-import { UploadCloudIcon, ImageIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useCallback, useRef } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { UploadCloudIcon, ImageIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ImageUploaderProps {
-  onFileAccepted: (file: File) => void
-  maxSizeMB?: number
-  label?: string
-  hint?: string
-  disabled?: boolean
-  className?: string
-  accept?: Record<string, string[]>
+  onFileAccepted: (file: File) => void;
+  maxSizeMB?: number;
+  label?: string;
+  hint?: string;
+  disabled?: boolean;
+  className?: string;
+  accept?: Record<string, string[]>;
 }
 
 export function ImageUploader({
@@ -29,16 +29,16 @@ export function ImageUploader({
     'image/gif': ['.gif'],
   },
 }: ImageUploaderProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        onFileAccepted(acceptedFiles[0])
+        onFileAccepted(acceptedFiles[0]);
       }
     },
     [onFileAccepted],
-  )
+  );
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
@@ -46,9 +46,9 @@ export function ImageUploader({
     maxFiles: 1,
     maxSize: maxSizeMB * 1024 * 1024,
     disabled,
-  })
+  });
 
-  const rejectionMessage = fileRejections[0]?.errors[0]?.message
+  const rejectionMessage = fileRejections[0]?.errors[0]?.message;
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -93,13 +93,13 @@ export function ImageUploader({
         accept="image/*"
         className="hidden"
         onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) onFileAccepted(file)
-          e.target.value = '' // reset so same file can be re-selected
+          const file = e.target.files?.[0];
+          if (file) onFileAccepted(file);
+          e.target.value = ''; // reset so same file can be re-selected
         }}
       />
 
       {rejectionMessage && <p className="text-sm text-destructive">{rejectionMessage}</p>}
     </div>
-  )
+  );
 }

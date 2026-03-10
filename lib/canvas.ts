@@ -1,4 +1,4 @@
-import type { PixelCrop, Template } from './types'
+import type { PixelCrop, Template } from './types';
 
 /**
  * Load an image from a URL.
@@ -6,12 +6,12 @@ import type { PixelCrop, Template } from './types'
  */
 export function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
-    img.src = url
-  })
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
 }
 
 /**
@@ -29,15 +29,30 @@ export async function compositeImage(
   croppedAreaPixels: PixelCrop,
   template: Template,
   format: 'png' | 'jpeg' = 'png',
+  circular = false,
 ): Promise<Blob> {
-  const [userImg, overlayImg] = await Promise.all([loadImage(userImageUrl), loadImage(template.overlay_image_url)])
+  const [userImg, overlayImg] = await Promise.all([loadImage(userImageUrl), loadImage(template.overlay_image_url)]);
 
-  const canvas = document.createElement('canvas')
-  canvas.width = template.canvas_width
-  canvas.height = template.canvas_height
-  const ctx = canvas.getContext('2d')!
+  const canvas = document.createElement('canvas');
+  canvas.width = template.canvas_width;
+  canvas.height = template.canvas_height;
+  const ctx = canvas.getContext('2d')!;
 
   const drawUserPhoto = () => {
+    if (circular) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(
+        template.user_area_x + template.user_area_width / 2,
+        template.user_area_y + template.user_area_height / 2,
+        template.user_area_width / 2,
+        template.user_area_height / 2,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.clip();
+    }
     ctx.drawImage(
       userImg,
       croppedAreaPixels.x,
@@ -48,49 +63,50 @@ export async function compositeImage(
       template.user_area_y,
       template.user_area_width,
       template.user_area_height,
-    )
-  }
+    );
+    if (circular) ctx.restore();
+  };
 
   const drawOverlay = () => {
-    ctx.drawImage(overlayImg, 0, 0, template.canvas_width, template.canvas_height)
-  }
+    ctx.drawImage(overlayImg, 0, 0, template.canvas_width, template.canvas_height);
+  };
 
   if (template.overlay_on_top) {
-    drawUserPhoto()
-    drawOverlay()
+    drawUserPhoto();
+    drawOverlay();
   } else {
-    drawOverlay()
-    drawUserPhoto()
+    drawOverlay();
+    drawUserPhoto();
   }
 
-  const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png'
-  const quality = format === 'jpeg' ? 0.92 : 1.0
+  const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const quality = format === 'jpeg' ? 0.92 : 1.0;
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
-        if (blob) resolve(blob)
-        else reject(new Error('Canvas toBlob failed'))
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas toBlob failed'));
       },
       mimeType,
       quality,
-    )
-  })
+    );
+  });
 }
 
 /**
  * Triggers a browser download for a Blob.
  */
 export function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.style.display = 'none'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -104,56 +120,68 @@ export function drawPreview(
   overlayImgEl: HTMLImageElement,
   croppedAreaPixels: PixelCrop,
   template: Template,
+  circular = false,
 ): void {
-  const dpr = window.devicePixelRatio || 1
-  const displayW = canvasEl.offsetWidth
-  const displayH = canvasEl.offsetHeight
+  const dpr = window.devicePixelRatio || 1;
+  const displayW = canvasEl.offsetWidth;
+  const displayH = canvasEl.offsetHeight;
 
-  if (displayW === 0 || displayH === 0) return
+  if (displayW === 0 || displayH === 0) return;
 
-  canvasEl.width = displayW * dpr
-  canvasEl.height = displayH * dpr
+  canvasEl.width = displayW * dpr;
+  canvasEl.height = displayH * dpr;
 
-  const ctx = canvasEl.getContext('2d')!
-  ctx.scale(dpr, dpr)
+  const ctx = canvasEl.getContext('2d')!;
+  ctx.scale(dpr, dpr);
 
-  // Scale factor: map native template dimensions → display dimensions
-  const scaleX = displayW / template.canvas_width
-  const scaleY = displayH / template.canvas_height
+  const scaleX = displayW / template.canvas_width;
+  const scaleY = displayH / template.canvas_height;
+
+  const areaX = template.user_area_x * scaleX;
+  const areaY = template.user_area_y * scaleY;
+  const areaW = template.user_area_width * scaleX;
+  const areaH = template.user_area_height * scaleY;
 
   const drawUser = () => {
+    if (circular) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(areaX + areaW / 2, areaY + areaH / 2, areaW / 2, areaH / 2, 0, 0, Math.PI * 2);
+      ctx.clip();
+    }
     ctx.drawImage(
       userImgEl,
       croppedAreaPixels.x,
       croppedAreaPixels.y,
       croppedAreaPixels.width,
       croppedAreaPixels.height,
-      template.user_area_x * scaleX,
-      template.user_area_y * scaleY,
-      template.user_area_width * scaleX,
-      template.user_area_height * scaleY,
-    )
-  }
+      areaX,
+      areaY,
+      areaW,
+      areaH,
+    );
+    if (circular) ctx.restore();
+  };
 
   const drawOverlay = () => {
-    ctx.drawImage(overlayImgEl, 0, 0, displayW, displayH)
-  }
+    ctx.drawImage(overlayImgEl, 0, 0, displayW, displayH);
+  };
 
   if (template.overlay_on_top) {
-    drawUser()
-    drawOverlay()
+    drawUser();
+    drawOverlay();
   } else {
-    drawOverlay()
-    drawUser()
+    drawOverlay();
+    drawUser();
   }
 }
 
 /** Convert a File to a data URL string */
 export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

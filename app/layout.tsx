@@ -1,18 +1,18 @@
-import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
-import './globals.css'
-import { Toaster } from '@/components/ui/sonner'
-import { ThemeProvider } from '@/components/theme-provider'
+import type { Metadata } from 'next';
+import { Geist } from 'next/font/google';
+import './globals.css';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const geist = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
-})
+});
 
 export const metadata: Metadata = {
   title: 'Profile Picture Generator',
   description: 'Create beautiful custom profile pictures for your church programs.',
-}
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,5 +24,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

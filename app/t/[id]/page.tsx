@@ -1,44 +1,31 @@
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import { createClient } from "@/lib/supabase"
-import { PhotoEditor } from "@/components/editor/PhotoEditor"
-import type { Template } from "@/lib/types"
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { createClient } from '@/lib/supabase';
+import { PhotoEditor } from '@/components/editor/PhotoEditor';
+import type { Template } from '@/lib/types';
 
 async function getTemplate(id: string): Promise<Template | null> {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from("templates")
-    .select("*")
-    .eq("id", id)
-    .eq("is_published", true)
-    .single()
+  const supabase = createClient();
+  const { data, error } = await supabase.from('templates').select('*').eq('id', id).eq('is_published', true).single();
 
-  if (error || !data) return null
-  return data as Template
+  if (error || !data) return null;
+  return data as Template;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}): Promise<Metadata> {
-  const { id } = await params
-  const template = await getTemplate(id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const template = await getTemplate(id);
 
   if (!template) {
-    return { title: "Template Not Found" }
+    return { title: 'Template Not Found' };
   }
 
   return {
     title: `${template.name} — Create Your Profile Picture`,
-    description:
-      template.description ??
-      "Upload your photo and download a beautiful custom profile picture.",
+    description: template.description ?? 'Upload your photo and download a beautiful custom profile picture.',
     openGraph: {
       title: `${template.name} — Profile Picture Generator`,
-      description:
-        template.description ??
-        "Upload your photo and download a beautiful custom profile picture.",
+      description: template.description ?? 'Upload your photo and download a beautiful custom profile picture.',
       images: [
         {
           url: template.overlay_image_url,
@@ -48,28 +35,22 @@ export async function generateMetadata({
         },
       ],
     },
-  }
+  };
 }
 
-export default async function TemplatePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  const template = await getTemplate(id)
+export default async function TemplatePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const template = await getTemplate(id);
 
-  if (!template) notFound()
+  if (!template) notFound();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/40">
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/40">
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="mx-auto max-w-lg px-4 py-4 text-center">
           <h1 className="text-lg font-bold leading-tight">{template.name}</h1>
-          {template.description && (
-            <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
-          )}
+          {template.description && <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>}
         </div>
       </header>
 
@@ -80,8 +61,8 @@ export default async function TemplatePage({
 
       {/* Footer */}
       <footer className="mt-8 pb-safe pb-6 text-center text-xs text-muted-foreground">
-        Made with ❤️ for the congregation
+        Made with ❤️ for ChristTribe
       </footer>
     </div>
-  )
+  );
 }

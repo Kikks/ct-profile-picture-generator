@@ -1,12 +1,13 @@
-'use client'
+'use client';
 
-import { cn } from '@/lib/utils'
-import { CheckIcon } from 'lucide-react'
+import { Fragment } from 'react';
+import { cn } from '@/lib/utils';
+import { CheckIcon } from 'lucide-react';
 
 interface StepIndicatorProps {
-  steps: string[]
-  currentStep: number // 1-indexed
-  className?: string
+  steps: string[];
+  currentStep: number; // 1-indexed
+  className?: string;
 }
 
 export function StepIndicator({ steps, currentStep, className }: StepIndicatorProps) {
@@ -14,12 +15,12 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
     <div className={cn('w-full', className)}>
       <div className="flex items-center justify-between">
         {steps.map((label, index) => {
-          const stepNum = index + 1
-          const isCompleted = stepNum < currentStep
-          const isCurrent = stepNum === currentStep
+          const stepNum = index + 1;
+          const isCompleted = stepNum < currentStep;
+          const isCurrent = stepNum === currentStep;
 
           return (
-            <div key={label} className="flex flex-1 items-center">
+            <Fragment key={label}>
               {/* Circle */}
               <div className="flex flex-col items-center">
                 <div
@@ -48,8 +49,8 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
               {index < steps.length - 1 && (
                 <div className={cn('mx-2 h-0.5 flex-1 transition-all', isCompleted ? 'bg-primary' : 'bg-border')} />
               )}
-            </div>
-          )
+            </Fragment>
+          );
         })}
       </div>
 
@@ -58,5 +59,5 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
         Step {currentStep} of {steps.length}: {steps[currentStep - 1]}
       </p>
     </div>
-  )
+  );
 }

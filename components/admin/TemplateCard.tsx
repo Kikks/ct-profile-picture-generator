@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import { ExternalLinkIcon, CopyIcon, EditIcon, TrashIcon, GlobeIcon, EyeOffIcon } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { useState } from 'react';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { ExternalLinkIcon, CopyIcon, EditIcon, TrashIcon, GlobeIcon, EyeOffIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,60 +15,60 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import type { Template } from '@/lib/types'
-import { formatDate } from '@/lib/utils'
+} from '@/components/ui/dialog';
+import type { Template } from '@/lib/types';
+import { formatDate } from '@/lib/utils';
 
 interface TemplateCardProps {
-  template: Template
-  appUrl: string
-  onDelete: (id: string) => void
-  onTogglePublish: (id: string, published: boolean) => void
+  template: Template;
+  appUrl: string;
+  onDelete: (id: string) => void;
+  onTogglePublish: (id: string, published: boolean) => void;
 }
 
 export function TemplateCard({ template, appUrl, onDelete, onTogglePublish }: TemplateCardProps) {
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isToggling, setIsToggling] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
-  const shareUrl = `${appUrl}/t/${template.id}`
+  const shareUrl = `${appUrl}/t/${template.id}`;
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(shareUrl)
-    toast.success('Link copied to clipboard!')
-  }
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Link copied to clipboard!');
+  };
 
   const handleDelete = async () => {
-    setIsDeleting(true)
-    const res = await fetch(`/api/templates/${template.id}`, { method: 'DELETE' })
+    setIsDeleting(true);
+    const res = await fetch(`/api/templates/${template.id}`, { method: 'DELETE' });
     if (res.ok) {
-      toast.success('Template deleted')
-      onDelete(template.id)
+      toast.success('Template deleted');
+      onDelete(template.id);
     } else {
-      toast.error('Failed to delete template')
+      toast.error('Failed to delete template');
     }
-    setIsDeleting(false)
-    setDeleteOpen(false)
-  }
+    setIsDeleting(false);
+    setDeleteOpen(false);
+  };
 
   const handleTogglePublish = async () => {
-    setIsToggling(true)
+    setIsToggling(true);
     const res = await fetch(`/api/templates/${template.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_published: !template.is_published }),
-    })
+    });
     if (res.ok) {
-      toast.success(template.is_published ? 'Template unpublished' : 'Template published!')
-      onTogglePublish(template.id, !template.is_published)
+      toast.success(template.is_published ? 'Template unpublished' : 'Template published!');
+      onTogglePublish(template.id, !template.is_published);
     } else {
-      toast.error('Failed to update template')
+      toast.error('Failed to update template');
     }
-    setIsToggling(false)
-  }
+    setIsToggling(false);
+  };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden self-stretch flex flex-col">
       {/* Overlay preview */}
       <div className="relative aspect-square w-full overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -80,7 +80,7 @@ export function TemplateCard({ template, appUrl, onDelete, onTogglePublish }: Te
         </div>
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex-1">
         <h3 className="truncate font-semibold text-foreground">{template.name}</h3>
         {template.description && (
           <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{template.description}</p>
@@ -90,18 +90,20 @@ export function TemplateCard({ template, appUrl, onDelete, onTogglePublish }: Te
         {template.is_published && (
           <div className="mt-3 flex items-center gap-2 rounded-lg bg-muted px-3 py-2">
             <span className="flex-1 truncate text-xs text-muted-foreground">/t/{template.id}</span>
-            <button onClick={copyLink} className="flex-shrink-0 text-primary hover:text-primary/80" title="Copy link">
+            <button onClick={copyLink} className="shrink-0 text-primary hover:text-primary/80" title="Copy link">
               <CopyIcon className="h-4 w-4" />
             </button>
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 text-primary hover:text-primary/80"
-              title="Open link"
-            >
-              <ExternalLinkIcon className="h-4 w-4" />
-            </a>
+            <button className="shrink-0 text-primary hover:text-primary/80" title="Copy link">
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-primary hover:text-primary/80"
+                title="Open link"
+              >
+                <ExternalLinkIcon className="h-4 w-4" />
+              </a>
+            </button>
           </div>
         )}
       </CardContent>
@@ -119,21 +121,17 @@ export function TemplateCard({ template, appUrl, onDelete, onTogglePublish }: Te
           )}
         </Button>
 
-        <Button size="sm" variant="outline" render={<Link href={`/admin/${template.id}`} />}>
-          <EditIcon className="mr-1.5 h-4 w-4" /> Edit
+        <Button size="sm" variant="outline" asChild>
+          <Link href={`/admin/${template.id}`}>
+            <EditIcon className="mr-1.5 h-4 w-4" /> Edit
+          </Link>
         </Button>
 
         <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogTrigger
-            render={
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              />
-            }
-          >
-            <TrashIcon className="h-4 w-4" />
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline">
+              <TrashIcon className="h-4 w-4" />
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -155,5 +153,5 @@ export function TemplateCard({ template, appUrl, onDelete, onTogglePublish }: Te
         </Dialog>
       </CardFooter>
     </Card>
-  )
+  );
 }

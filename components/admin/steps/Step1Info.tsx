@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { ASPECT_RATIOS } from '@/lib/utils'
-import type { AspectRatio } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ASPECT_RATIOS } from '@/lib/utils';
+import type { AspectRatio } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const schema = z.object({
   name: z.string().min(1, 'Template name is required').max(100),
@@ -17,13 +17,13 @@ const schema = z.object({
   aspect_ratio: z.enum(['1:1', '4:5', '16:9', '9:16', 'custom'] as const),
   custom_width: z.number().int().min(100).max(4096).optional(),
   custom_height: z.number().int().min(100).max(4096).optional(),
-})
+});
 
-export type Step1Values = z.infer<typeof schema>
+export type Step1Values = z.infer<typeof schema>;
 
 interface Step1InfoProps {
-  defaultValues?: Partial<Step1Values>
-  onNext: (values: Step1Values & { canvas_width: number; canvas_height: number }) => void
+  defaultValues?: Partial<Step1Values>;
+  onNext: (values: Step1Values & { canvas_width: number; canvas_height: number }) => void;
 }
 
 export function Step1Info({ defaultValues, onNext }: Step1InfoProps) {
@@ -35,22 +35,22 @@ export function Step1Info({ defaultValues, onNext }: Step1InfoProps) {
   } = useForm<Step1Values>({
     resolver: zodResolver(schema),
     defaultValues: { aspect_ratio: '1:1', ...defaultValues },
-  })
+  });
 
-  const selectedRatio = watch('aspect_ratio') as AspectRatio
+  const selectedRatio = watch('aspect_ratio') as AspectRatio;
 
   const onSubmit = (values: Step1Values) => {
-    let canvas_width: number, canvas_height: number
+    let canvas_width: number, canvas_height: number;
     if (values.aspect_ratio === 'custom') {
-      canvas_width = values.custom_width ?? 1000
-      canvas_height = values.custom_height ?? 1000
+      canvas_width = values.custom_width ?? 1000;
+      canvas_height = values.custom_height ?? 1000;
     } else {
-      const preset = ASPECT_RATIOS[values.aspect_ratio as Exclude<AspectRatio, 'custom'>]
-      canvas_width = preset.width
-      canvas_height = preset.height
+      const preset = ASPECT_RATIOS[values.aspect_ratio as Exclude<AspectRatio, 'custom'>];
+      canvas_width = preset.width;
+      canvas_height = preset.height;
     }
-    onNext({ ...values, canvas_width, canvas_height })
-  }
+    onNext({ ...values, canvas_width, canvas_height });
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -143,5 +143,5 @@ export function Step1Info({ defaultValues, onNext }: Step1InfoProps) {
         Continue
       </Button>
     </form>
-  )
+  );
 }

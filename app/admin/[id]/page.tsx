@@ -1,50 +1,39 @@
-import { redirect, notFound } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeftIcon } from "lucide-react"
-import { TemplateCreator } from "@/components/admin/TemplateCreator"
-import { createAdminClient } from "@/lib/supabase"
-import { getAdminSession } from "@/lib/auth"
-import type { Template } from "@/lib/types"
+import { redirect, notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeftIcon } from 'lucide-react';
+import { TemplateCreator } from '@/components/admin/TemplateCreator';
+import { createAdminClient } from '@/lib/supabase';
+import { getAdminSession } from '@/lib/auth';
+import type { Template } from '@/lib/types';
 
 export const metadata = {
-  title: "Edit Template — Admin",
-}
+  title: 'Edit Template — Admin',
+};
 
 async function getTemplate(id: string): Promise<Template | null> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from("templates")
-    .select("*")
-    .eq("id", id)
-    .single()
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from('templates').select('*').eq('id', id).single();
 
-  if (error || !data) return null
-  return data as Template
+  if (error || !data) return null;
+  return data as Template;
 }
 
-export default async function EditTemplatePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const isAdmin = await getAdminSession()
-  if (!isAdmin) redirect("/admin/login")
+export default async function EditTemplatePage({ params }: { params: Promise<{ id: string }> }) {
+  const isAdmin = await getAdminSession();
+  if (!isAdmin) redirect('/admin/login');
 
-  const { id } = await params
-  const template = await getTemplate(id)
+  const { id } = await params;
+  const template = await getTemplate(id);
 
-  if (!template) notFound()
+  if (!template) notFound();
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-4">
-          <Link
-            href="/admin"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
+          <Link href="/admin" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeftIcon className="h-4 w-4" />
             Back
           </Link>
@@ -56,5 +45,5 @@ export default async function EditTemplatePage({
         <TemplateCreator appUrl={appUrl} existingTemplate={template} />
       </main>
     </div>
-  )
+  );
 }
