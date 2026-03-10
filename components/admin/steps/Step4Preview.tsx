@@ -1,10 +1,13 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { drawPreview, loadImage } from '@/lib/canvas';
-import type { UserArea } from '@/lib/types';
+import type { UserArea, PixelCrop } from '@/lib/types';
 import { ImageUploader } from '@/components/shared/ImageUploader';
+import { ZoomInIcon, ZoomOutIcon } from 'lucide-react';
 
 interface Step4PreviewProps {
   overlayImageUrl: string;
@@ -30,9 +33,14 @@ export function Step4Preview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sampleFile, setSampleFile] = useState<File | null>(null);
   const [sampleUrl, setSampleUrl] = useState<string | null>(null);
-  const [isRendering, setIsRendering] = useState(false);
 
-  // Mock template for preview drawing
+  // Crop state for the sample photo
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<PixelCrop | null>(null);
+
+  const cropAspect = userArea.width / userArea.height;
+
   const mockTemplate = {
     canvas_width: canvasWidth,
     canvas_height: canvasHeight,
@@ -42,76 +50,107 @@ export function Step4Preview({
     user_area_height: userArea.height,
     overlay_on_top: overlayOnTop,
     overlay_image_url: overlayImageUrl,
+    user_area_circular: circular,
   };
 
+  const handleCropComplete = useCallback((_: unknown, pixels: PixelCrop) => {
+    setCroppedAreaPixels(pixels);
+  }, []);
+
+  // Render the composite whenever the crop changes
   useEffect(() => {
-    if (!sampleUrl || !canvasRef.current) return;
-    setIsRendering(true);
+    if (!sampleUrl || !croppedAreaPixels || !canvasRef.current) return;
 
+    let cancelled = false;
     const render = async () => {
-      try {
-        const [userImg, overlayImg] = await Promise.all([loadImage(sampleUrl), loadImage(overlayImageUrl)]);
-
-        // Center-crop the source image to match the user area aspect ratio (object-fit: cover)
-        const areaAspect = userArea.width / userArea.height;
-        const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-        let coverCrop;
-        if (imgAspect > areaAspect) {
-          const cropH = userImg.naturalHeight;
-          const cropW = cropH * areaAspect;
-          coverCrop = { x: (userImg.naturalWidth - cropW) / 2, y: 0, width: cropW, height: cropH };
-        } else {
-          const cropW = userImg.naturalWidth;
-          const cropH = cropW / areaAspect;
-          coverCrop = { x: 0, y: (userImg.naturalHeight - cropH) / 2, width: cropW, height: cropH };
-        }
-
-        drawPreview(
-          canvasRef.current!,
-          userImg,
-          overlayImg,
-          coverCrop,
-          mockTemplate as Parameters<typeof drawPreview>[4],
-          circular,
-        );
-      } finally {
-        setIsRendering(false);
-      }
+      const [userImg, overlayImg] = await Promise.all([loadImage(sampleUrl), loadImage(overlayImageUrl)]);
+      if (cancelled) return;
+      drawPreview(
+        canvasRef.current!,
+        userImg,
+        overlayImg,
+        croppedAreaPixels,
+        mockTemplate as Parameters<typeof drawPreview>[4],
+        circular,
+      );
     };
-
-    render();
+    render().catch(console.error);
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sampleUrl, overlayImageUrl, circular, JSON.stringify(mockTemplate)]);
+  }, [sampleUrl, overlayImageUrl, circular, croppedAreaPixels, JSON.stringify(mockTemplate)]);
 
   useEffect(() => {
     if (!sampleFile) return;
     const url = URL.createObjectURL(sampleFile);
     setSampleUrl(url);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
     return () => URL.revokeObjectURL(url);
   }, [sampleFile]);
 
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Upload a sample photo to preview how the final profile picture will look. Members will be able to adjust their
-        photo during use.
+        Upload a sample photo to preview how the final profile picture will look. Drag and zoom to adjust placement.
       </p>
 
-      {/* Preview canvas */}
-      <div className="overflow-hidden rounded-xl border border-border bg-muted">
-        {sampleUrl ? (
-          <canvas ref={canvasRef} className="w-full" style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }} />
-        ) : (
-          <div className="flex items-center justify-center" style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}>
-            <div className="text-center">
-              <p className="text-muted-foreground">Preview appears here</p>
-              <p className="mt-1 text-xs text-muted-foreground">Upload a sample photo below</p>
-            </div>
+      {sampleUrl ? (
+        <>
+          {/* Crop controls */}
+          <div
+            className="relative w-full overflow-hidden rounded-xl border border-border bg-black"
+            style={{ aspectRatio: `${userArea.width} / ${userArea.height}` }}
+          >
+            <Cropper
+              image={sampleUrl}
+              crop={crop}
+              zoom={zoom}
+              aspect={cropAspect}
+              cropShape={circular ? 'round' : 'rect'}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={handleCropComplete}
+              showGrid={false}
+              style={{
+                containerStyle: { borderRadius: '0.75rem' },
+                cropAreaStyle: { border: '2px dashed rgba(255,255,255,0.5)' },
+              }}
+            />
           </div>
-        )}
-      </div>
 
-      {isRendering && <p className="text-center text-sm text-muted-foreground">Rendering preview…</p>}
+          {/* Zoom slider */}
+          <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
+            <ZoomOutIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Slider
+              value={[zoom]}
+              min={1}
+              max={3}
+              step={0.05}
+              onValueChange={(v) => setZoom(Array.isArray(v) ? v[0] : v)}
+              className="flex-1"
+            />
+            <ZoomInIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+
+          {/* Live composite preview */}
+          <div className="overflow-hidden rounded-xl border border-border bg-muted">
+            <canvas ref={canvasRef} className="w-full" style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }} />
+          </div>
+        </>
+      ) : (
+        <div
+          className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-muted"
+          style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}
+        >
+          <div className="text-center">
+            <p className="text-muted-foreground">Preview appears here</p>
+            <p className="mt-1 text-xs text-muted-foreground">Upload a sample photo below</p>
+          </div>
+        </div>
+      )}
 
       <ImageUploader
         onFileAccepted={setSampleFile}

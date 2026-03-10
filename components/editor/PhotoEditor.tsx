@@ -166,10 +166,10 @@ export function PhotoEditor({ template }: PhotoEditorProps) {
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground text-center">Pinch to zoom · Drag to reposition your photo</p>
 
-          {/* Cropper + live overlay preview */}
+          {/* Cropper — standalone so the crop guide is always visible */}
           <div
             className="relative w-full overflow-hidden rounded-xl border border-border bg-black"
-            style={{ aspectRatio: `${template.canvas_width} / ${template.canvas_height}` }}
+            style={{ aspectRatio: `${template.user_area_width} / ${template.user_area_height}` }}
           >
             <Cropper
               image={userImageUrl}
@@ -182,20 +182,10 @@ export function PhotoEditor({ template }: PhotoEditorProps) {
               showGrid={false}
               cropShape={circular ? 'round' : 'rect'}
               style={{
-                containerStyle: { borderRadius: '0' },
-                cropAreaStyle: { border: '2px dashed rgba(255,255,255,0.6)' },
+                containerStyle: { borderRadius: '0.75rem' },
+                cropAreaStyle: { border: '2px dashed rgba(255,255,255,0.5)' },
               }}
             />
-
-            {/* Live overlay preview — pointer-events:none so it doesn't block touch */}
-            <div className="pointer-events-none absolute inset-0">
-              <EditorCanvas
-                userImageUrl={userImageUrl}
-                template={template}
-                croppedAreaPixels={croppedAreaPixels}
-                className="h-full w-full"
-              />
-            </div>
           </div>
 
           {/* Zoom slider */}
@@ -210,6 +200,16 @@ export function PhotoEditor({ template }: PhotoEditorProps) {
               className="flex-1"
             />
             <ZoomInIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+
+          {/* Live composite preview */}
+          <div className="overflow-hidden rounded-xl border border-border bg-muted">
+            <EditorCanvas
+              userImageUrl={userImageUrl}
+              template={template}
+              croppedAreaPixels={croppedAreaPixels}
+              className="w-full"
+            />
           </div>
 
           <div className="flex gap-3">
