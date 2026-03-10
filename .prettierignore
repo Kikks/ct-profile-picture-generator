@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+.yarn
+
+# Build & output
+.next
+out
+build
+.vercel
+
+# Lockfiles (generated)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+
+# Generated / auto-generated
+next-env.d.ts
+*.tsbuildinfo
+
+# Env (sensitive; avoid reformatting)
+.env*
+!.env.example
+
+# Misc
+coverage
+.DS_Store
+*.min.js
+*.min.css
